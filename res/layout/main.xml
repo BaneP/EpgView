@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:epgView="http://schemas.android.com/apk/res/com.mole.epgview"
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent">
+
+    <com.mole.epgview.EpgView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        epgView:channelRowHeight="50dp"
+        epgView:oneMinutePixelWidth="5dp">
+
+    </com.mole.epgview.EpgView>
+
+</FrameLayout>
+
