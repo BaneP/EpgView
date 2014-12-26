@@ -10,6 +10,7 @@ import android.view.ViewGroup;
  * Created by bane on 25/12/14.
  */
 public class EpgView extends ViewGroup {
+    private static final String TAG="EpgView";
     public static final int INVALID_VALUE = -1;
 
     private int mChannelRowHeight = INVALID_VALUE;
@@ -48,10 +49,6 @@ public class EpgView extends ViewGroup {
     }
 
     @Override
-    protected void onLayout(boolean b, int i, int i1, int i2, int i3) {
-    }
-
-    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
@@ -65,19 +62,31 @@ public class EpgView extends ViewGroup {
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = getChildAt(i);
-
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-
-            if (currentX + child.getMeasuredWidth() > widthSize-getPaddingRight()) {
+            measureChild(child,widthMeasureSpec,heightMeasureSpec);
+            final int childHeight=child.getMeasuredHeight();
+            final int childWidth=child.getMeasuredWidth();
+            if (currentX + childWidth > widthSize-getPaddingRight()) {
                 currentY += mChannelRowHeight + mVerticalSpacing;
                 currentX = getPaddingLeft();
             }
 
-            lp.x=currentX+getMeasuredWidth();
+            lp.x=currentX;
             lp.y=currentY;
+            currentX+=childWidth;
         }
 
         setMeasuredDimension(resolveSize(widthSize, widthMeasureSpec), resolveSize(heightSize, heightMeasureSpec));
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        final int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++) {
+            View child = getChildAt(i);
+            LayoutParams lp = (LayoutParams) child.getLayoutParams();
+            child.layout(lp.x,lp.y,lp.x+child.getMeasuredWidth(),lp.y+child.getMeasuredHeight());
+        }
     }
 
     @Override
