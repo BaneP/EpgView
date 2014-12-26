@@ -9,8 +9,8 @@ import android.view.ViewGroup;
 /**
  * Created by bane on 25/12/14.
  */
-public class EpgView extends ViewGroup {
-    private static final String TAG="EpgView";
+public class EpgView extends EpgAdapterView<EpgAdapter> {
+    private static final String TAG = "EpgView";
     public static final int INVALID_VALUE = -1;
 
     private int mChannelRowHeight = INVALID_VALUE;
@@ -19,6 +19,8 @@ public class EpgView extends ViewGroup {
      */
     private int mOneMinutePixelWidth = 1;
     private int mVerticalSpacing = 1;
+
+    private EpgAdapter mAdapter = null;
 
     public EpgView(Context context) {
         super(context);
@@ -59,24 +61,61 @@ public class EpgView extends ViewGroup {
         int currentX = getPaddingLeft();
         int currentY = getPaddingTop();
 
+
+/*
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             View child = getChildAt(i);
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            measureChild(child,widthMeasureSpec,heightMeasureSpec);
-            final int childHeight=child.getMeasuredHeight();
-            final int childWidth=child.getMeasuredWidth();
-            if (currentX + childWidth > widthSize-getPaddingRight()) {
+            measureChild(child, widthMeasureSpec, heightMeasureSpec);
+            final int childHeight = child.getMeasuredHeight();
+            final int childWidth = child.getMeasuredWidth();
+            if (currentX + childWidth > widthSize - getPaddingRight()) {
                 currentY += mChannelRowHeight + mVerticalSpacing;
                 currentX = getPaddingLeft();
             }
 
-            lp.x=currentX;
-            lp.y=currentY;
-            currentX+=childWidth;
+            lp.x = currentX;
+            lp.y = currentY;
+            currentX += childWidth;
         }
+*/      if(mAdapter!=null) {
+            final int channelsCount = mChannelItemCount;
+            for (int i = 0; i < channelsCount; i++) {//TODO use first visible indexes
+                final int eventCount = getEventsCount(i);
+                for (int j = 0; j < eventCount; j++) {
+                    View child = prepareView(null, i, j);
+                    LayoutParams lp = new LayoutParams(mAdapter.getEventWidth(i,j),mChannelRowHeight);
+                    child.setLayoutParams(lp);
+                    measureChild(child, MeasureSpec.makeMeasureSpec(lp.width,MeasureSpec.EXACTLY),
+                            MeasureSpec.makeMeasureSpec(lp.height,MeasureSpec.EXACTLY));
 
+                    final int childHeight = child.getMeasuredHeight();
+                    final int childWidth = child.getMeasuredWidth();
+                    lp.x = currentX;
+                    lp.y = currentY;
+                    //If child is out of screen
+                    if (currentX + childWidth > widthSize - getPaddingRight()) {
+                        break;
+                    }else{
+                        currentX += childWidth;
+                    }
+                }
+                //If child row is out of screen
+                if(currentY+mChannelRowHeight + mVerticalSpacing>heightSize-getPaddingBottom()){
+                    break;
+                }else {
+                    currentY += mChannelRowHeight + mVerticalSpacing;
+                    currentX = getPaddingLeft();
+                }
+            }
+        }
         setMeasuredDimension(resolveSize(widthSize, widthMeasureSpec), resolveSize(heightSize, heightMeasureSpec));
+    }
+
+    private View prepareView(View view,int channelPosition,int eventPosition){
+        View preparedView=mAdapter.getView(channelPosition,eventPosition,view,this);
+        return preparedView;
     }
 
     @Override
@@ -85,7 +124,7 @@ public class EpgView extends ViewGroup {
         for (int i = 0; i < childCount; i++) {
             View child = getChildAt(i);
             LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            child.layout(lp.x,lp.y,lp.x+child.getMeasuredWidth(),lp.y+child.getMeasuredHeight());
+            child.layout(lp.x, lp.y, lp.x + child.getMeasuredWidth(), lp.y + child.getMeasuredHeight());
         }
     }
 
@@ -110,8 +149,15 @@ public class EpgView extends ViewGroup {
     }
 
     public static class LayoutParams extends ViewGroup.LayoutParams {
-
+        /**
+         * Coordinates on screen
+         */
         private int x, y;
+
+        /**
+         * View positions on screen
+         */
+        private int mChannelPosition, mEventPosition;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
@@ -120,5 +166,52 @@ public class EpgView extends ViewGroup {
         public LayoutParams(int width, int height) {
             super(width, height);
         }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public int getEventPosition() {
+            return mEventPosition;
+        }
+
+        public int getChannelPosition() {
+            return mChannelPosition;
+        }
+
+        public void setChannelPosition(int mChannelPosition) {
+            this.mChannelPosition = mChannelPosition;
+        }
+
+        public void setEventPosition(int mEventPosition) {
+            this.mEventPosition = mEventPosition;
+        }
+    }
+
+    @Override
+    public EpgAdapter getAdapter() {
+        return mAdapter;
+    }
+
+    @Override
+    public void setAdapter(EpgAdapter adapter) {
+        if (adapter == null) {
+            return;
+        }
+        mAdapter = adapter;
+        mChannelItemCount = mAdapter.getChannelsCount();
+        mSelectedChannelPosition=INVALID_POSITION;
+        mSelectedEventPosition=INVALID_POSITION;
+
+        requestLayout();
+    }
+
+    @Override
+    public View getSelectedView() {
+        return null;
     }
 }
