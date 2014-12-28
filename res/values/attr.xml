@@ -2,7 +2,9 @@
 <resources>
     <declare-styleable name="EpgView">
         <attr name="oneMinutePixelWidth" format="dimension"/>
+        <attr name="numberOfDaysToDisplay" format="integer"/>
         <attr name="channelRowHeight" format="dimension"/>
-        <attr name="verticalSpacing" format="dimension"/>
+        <attr name="verticalDivider" format="dimension"/>
+        <attr name="horizontalDivider" format="dimension"/>
     </declare-styleable>
 </resources>

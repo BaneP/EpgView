@@ -59,6 +59,10 @@ public interface IEpgAdapter {
 	 * @return True if event is regular data object, False if it is dummy space.
 	 */
 	boolean hasRegularData(int channel, int event);
+	
+	
+	
+	int[] getPositionAndOffsetForScrollValue(int scroll,int channel);
 
 	/**
 	 * Get the data item associated with the specified position in the data set.

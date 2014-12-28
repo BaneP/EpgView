@@ -8,8 +8,12 @@
         android:id="@+id/epg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:padding="10dp"
         epgView:channelRowHeight="50dp"
-        epgView:oneMinutePixelWidth="5dp">
+        epgView:oneMinutePixelWidth="5dp"
+        epgView:verticalDivider="1dp"
+        epgView:horizontalDivider="1dp"
+        epgView:numberOfDaysToDisplay="7">
 <!--
         <Button
             android:layout_width="wrap_content"

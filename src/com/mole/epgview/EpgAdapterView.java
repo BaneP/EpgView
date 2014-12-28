@@ -1,5 +1,7 @@
 package com.mole.epgview;
 
+import java.util.ArrayList;
+
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.SoundEffectConstants;
@@ -40,7 +42,20 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
     /**
      * First visible channel position
      */
-    private int mFirstChannelPosition;
+    int mFirstChannelPosition;
+    
+    ArrayList<Integer> mFirstEventsPositions;
+    
+    /**
+     * When set to true, calls to requestLayout() will not propagate up the parent hierarchy.
+     * This is used to layout the children during a layout pass.
+     */
+    boolean mBlockLayoutRequests = false;
+    
+    /**
+     * Indicates that this view is currently being laid out.
+     */
+    boolean mInLayout = false;
 
     public EpgAdapterView(Context context) {
         super(context);
