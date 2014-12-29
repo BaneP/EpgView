@@ -264,7 +264,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 							View child = mAdapter.getView(i, j,
 									mRecycler.get(eventWidth), EpgView.this);
 							addChildView(child, currentX, currentY, eventWidth,
-									mChannelRowHeight);
+									mChannelRowHeight,i,j);
 						}
 						// If child right edge is larger or equals to right
 						// bound of EpgView
@@ -318,9 +318,9 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 *            Item view height.
 	 */
 	private void addChildView(View child, int left, int top, int width,
-			int height) {
+			int height,int channelIndex,int eventIndex) {
 		mRecycler.add(child);
-		addViewToLayout(child, width, height, 0, 0);// TODO use real channel
+		addViewToLayout(child, width, height, channelIndex, eventIndex);
 													// index
 		measureItemView(child, width, height);
 		child.layout(left, top, left + width, top + height);
@@ -367,23 +367,28 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 *            Offset Y delta.
 	 */
 	private void offsetBy(float offsetDeltaX, float offsetDeltaY) {
+		Log.d(TAG,"offsetBy offsetDeltaX="+offsetDeltaX+", offsetDeltaY="+offsetDeltaY);
 		// adjust offset values
 		if (offsetDeltaX + mCurrentOffsetX > mTotalWidth - getWidth()) {
 			offsetDeltaX = mTotalWidth - getWidth() - mCurrentOffsetX;
+		}else if(mCurrentOffsetX+offsetDeltaX <0){
+			offsetDeltaX=-mCurrentOffsetX;
 		}
 		if (offsetDeltaY + mCurrentOffsetY > mTotalHeight - getHeight()) {
 			offsetDeltaY = mTotalHeight - getHeight() - mCurrentOffsetY;
+		}else if(mCurrentOffsetY+offsetDeltaY<0){
+			offsetDeltaY=-mCurrentOffsetY;
 		}
 
 		// offset views
 		for (int i = 0; i < getChildCount(); i++) {
-			getChildAt(i).offsetLeftAndRight((int) offsetDeltaX);
-			getChildAt(i).offsetTopAndBottom((int) offsetDeltaY);
+			getChildAt(i).offsetLeftAndRight((int) -offsetDeltaX);
+			getChildAt(i).offsetTopAndBottom((int) -offsetDeltaY);
 		}
 
 		// update state
-		mCurrentOffsetX -= offsetDeltaX;
-		mCurrentOffsetY -= offsetDeltaY;
+		mCurrentOffsetX += offsetDeltaX;
+		mCurrentOffsetY += offsetDeltaY;
 		Log.d(TAG, "offsetBy NEW X="+mCurrentOffsetX+", NEW Y="+mCurrentOffsetY);
 		update();
 	}
@@ -424,40 +429,6 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 				|| view.getRight() <= 0 || view.getTop() >= getMeasuredHeight()
 				|| view.getBottom() <= 0;
 	}
-
-	// private View prepareView(int eventWidth, int channelPosition,
-	// int eventPosition) {
-	// LayoutParams oldLp = null;
-	// View child = mRecycler.get(eventWidth);
-	// if (child != null) {
-	// oldLp = (LayoutParams) child.getLayoutParams();
-	// }
-	// child = mAdapter.getView(channelPosition, eventPosition, child, this);
-	//
-	// LayoutParams lp = (LayoutParams) child.getLayoutParams();
-	// // always use our LayoutParams
-	// if (lp == null || oldLp != lp) {
-	// lp = new LayoutParams(eventWidth, mChannelRowHeight);
-	// child.setLayoutParams(lp);
-	//
-	// // every child width must be exactly like its defined
-	// // (that is his duration)
-	// // and must have height like mChannelRowHeight
-	// child.measure(
-	// MeasureSpec.makeMeasureSpec(lp.width, MeasureSpec.EXACTLY),
-	// MeasureSpec.makeMeasureSpec(lp.height, MeasureSpec.EXACTLY));
-	// }// TODO check if this is ok to measure child only once
-	// mRecycler.add(child);
-	// return child;
-	// }
-
-	// private Runnable mUpdateRunnable = new Runnable() {
-	// @Override
-	// public void run() {
-	// mScrollIdle = true;
-	// layoutChildren();
-	// }
-	// };
 
 	@Override
 	public EpgAdapter getAdapter() {
