@@ -1,8 +1,5 @@
 package com.mole.epgview;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
@@ -13,9 +10,10 @@ import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.OverScroller;
-import android.widget.Scroller;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 
 /**
  * Created by bane on 25/12/14.
@@ -63,7 +61,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 */
 	private View mTouchedView;
 	/**
-	 * For handling gestures events
+	 * For handling gesture events
 	 */
 	private GestureDetector mGestureDetector;
 	private final GestureDetector.SimpleOnGestureListener mGestureListener = new SimpleOnGestureListener() {
@@ -156,6 +154,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
 		// offset content if the scroller fling is still active
 		if (mScroll.computeScrollOffset()) {
+			Log.d(TAG,"computeScroll, mScroll.getCurrX()="+mScroll.getCurrX()+", mScroll.getCurrY()="+mScroll.getCurrY());
 			offsetBy(mCurrentOffsetX + mScroll.getCurrX(), mCurrentOffsetY
 					+ mScroll.getCurrY());
 		}
@@ -163,12 +162,12 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
 	@Override
 	protected int computeHorizontalScrollOffset() {
-		return -mCurrentOffsetX;
+		return mCurrentOffsetX;
 	}
 
 	@Override
 	protected int computeVerticalScrollOffset() {
-		return -mCurrentOffsetY;
+		return mCurrentOffsetY;
 	}
 	
 	@Override
@@ -249,7 +248,6 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 					int[] firstPosInfo = mAdapter
 							.getPositionAndOffsetForScrollValue(
 									mCurrentOffsetX, i);
-					Log.d(TAG, "layoutChildren");
 					// No data for desired channel, don't draw anything
 					if (firstPosInfo[1] < 0 || firstPosInfo[0] < 0) {
 						continue;
@@ -259,7 +257,6 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 						final int eventWidth = mAdapter.getEventWidth(i, j)
 								- (j == 0 ? 0 : mHorizontalDivider);
 						final boolean attached=isItemAttached(i, j);
-						Log.d(TAG, "IS ITEM ATTACHED, i="+i+", j="+j+", res="+attached);
 						if (!attached) {
 							View child = mAdapter.getView(i, j,
 									mRecycler.get(eventWidth), EpgView.this);
@@ -394,10 +391,10 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	}
 
 	private void fling(int velocityX, int velocityY) {
-		mScroll.forceFinished(true);
-		mScroll.fling(-mCurrentOffsetX, -mCurrentOffsetY, velocityX, velocityY,
-				0, mTotalWidth - getWidth(), 0, mTotalHeight - getHeight());
-		invalidate();
+//		mScroll.forceFinished(true);
+//		mScroll.fling(-mCurrentOffsetX, -mCurrentOffsetY, velocityX, velocityY,
+//				0, mTotalWidth - getWidth(), 0, mTotalHeight - getHeight());
+//		invalidate();
 	}
 
 	private void removeInvisibleItems() {
