@@ -61,7 +61,12 @@ public interface IEpgAdapter {
 	boolean hasRegularData(int channel, int event);
 	
 	
-	
+	/**
+	 * Get information about first position for desired channel
+	 * @param scroll Current X scroll
+	 * @param channel Desired channel
+	 * @return [0] - Index of first child, [1] child's invisible part of view
+	 */
 	int[] getPositionAndOffsetForScrollValue(int scroll,int channel);
 
 	/**

@@ -2,6 +2,7 @@ package com.mole.epgview;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class MyActivity extends Activity {
+	private static final String TAG="MyActivity";
 	private EpgView mEpgView;
 
 	/** Called when the activity is first created. */
@@ -141,15 +143,18 @@ public class MyActivity extends Activity {
 		@Override
 		public View getView(int channel, int event, View convertView,
 				ViewGroup parent) {
-			convertView = new TextView(parent.getContext());
+			if (convertView == null) {
+				convertView = new TextView(parent.getContext());
+				convertView.setBackgroundColor(0x99FF0000);
+			}
 			((TextView) convertView).setText("channel " + channel + ", event "
 					+ event);
-			convertView.setBackgroundColor(0x99FF0000);
+
 			return convertView;
 		}
 
 		@Override
-		public int[] getPositionAndOffsetForScrollValue(int scroll,int channel) {
+		public int[] getPositionAndOffsetForScrollValue(int scroll, int channel) {
 			int[] retVal = { -1, -1 };
 			int sum = 0;
 			for (int i = 0; i < widths.length; i++) {
