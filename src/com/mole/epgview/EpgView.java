@@ -67,7 +67,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	private final GestureDetector.SimpleOnGestureListener mGestureListener = new SimpleOnGestureListener() {
 		public boolean onScroll(MotionEvent e1, MotionEvent e2,
 				float distanceX, float distanceY) {
-			offsetBy(distanceX, distanceY);
+			offsetBy(distanceX, mCurrentOffsetY);
 			return true;
 		};
 
@@ -169,7 +169,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	protected int computeVerticalScrollOffset() {
 		return mCurrentOffsetY;
 	}
-	
+
 	@Override
     protected int computeHorizontalScrollRange() {
         return mTotalWidth;
@@ -225,7 +225,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 * Draws children on the screen
 	 */
 	private void layoutChildren() {
-		
+
 		final boolean blockLayoutRequests = mBlockLayoutRequests;
 		if (blockLayoutRequests) {
 			return;
@@ -247,7 +247,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
 					int[] firstPosInfo = mAdapter
 							.getPositionAndOffsetForScrollValue(
-									mCurrentOffsetX, i);
+                                    mCurrentOffsetX, i);
 					// No data for desired channel, don't draw anything
 					if (firstPosInfo[1] < 0 || firstPosInfo[0] < 0) {
 						continue;
@@ -301,10 +301,10 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	}
 
 	/**
-	 * Add new item and its view to the layout.
-	 * 
-	 * @param item
-	 *            Item to add.
+	 * Add new view to the layout.
+	 *
+	 * @param child
+	 *            View to add.
 	 * @param left
 	 *            Left position, relative to parent.
 	 * @param top
@@ -313,17 +313,24 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 *            Item view width.
 	 * @param height
 	 *            Item view height.
+	 * @param channelIndex Channel index of view that is represent
+	 * @param eventIndex Index of event this view represents
 	 */
 	private void addChildView(View child, int left, int top, int width,
 			int height,int channelIndex,int eventIndex) {
 		mRecycler.add(child);
 		addViewToLayout(child, width, height, channelIndex, eventIndex);
-													// index
 		measureItemView(child, width, height);
 		child.layout(left, top, left + width, top + height);
 		child.invalidate();
 	}
 
+    /**
+     * Measures view with desired width and height
+     * @param view View to measure
+     * @param width Desired width
+     * @param height Desired height
+     */
 	private void measureItemView(final View view, final int width,
 			final int height) {
 		final int widthMeasureSpec = MeasureSpec.makeMeasureSpec(width,
@@ -333,7 +340,15 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 		view.measure(widthMeasureSpec, heightMeasureSpec);
 	}
 
-	private void addViewToLayout(final View view, int width, int height,
+    /**
+     * Adds created view to layout to be drawn
+     * @param view View to add
+     * @param width Desired width of view
+     * @param height Desired height of view
+     * @param channelIndex Channel index of view that is represent
+     * @param eventIndex Index of event this view represents
+     */
+    private void addViewToLayout(final View view, int width, int height,
 			int channelIndex, int eventIndex) {
 		LayoutParams params = (LayoutParams) view.getLayoutParams();
 		if (params == null) {
@@ -347,6 +362,9 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 		addViewInLayout(view, -1, params, true);
 	}
 
+    /**
+     * Updates screen while selection is moving or scrolling
+     */
 	private void update() {
 		removeInvisibleItems();
 		awakenScrollBars();
@@ -357,7 +375,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	/**
 	 * Offset all children views, so user will see an illusion of content
 	 * scrolling or flinging.
-	 * 
+	 *
 	 * @param offsetDeltaX
 	 *            Offset X delta.
 	 * @param offsetDeltaY
@@ -365,22 +383,17 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 */
 	private void offsetBy(float offsetDeltaX, float offsetDeltaY) {
 		Log.d(TAG,"offsetBy offsetDeltaX="+offsetDeltaX+", offsetDeltaY="+offsetDeltaY);
-		// adjust offset values
-		if (offsetDeltaX + mCurrentOffsetX > mTotalWidth - getWidth()) {
-			offsetDeltaX = mTotalWidth - getWidth() - mCurrentOffsetX;
-		}else if(mCurrentOffsetX+offsetDeltaX <0){
-			offsetDeltaX=-mCurrentOffsetX;
-		}
-		if (offsetDeltaY + mCurrentOffsetY > mTotalHeight - getHeight()) {
-			offsetDeltaY = mTotalHeight - getHeight() - mCurrentOffsetY;
-		}else if(mCurrentOffsetY+offsetDeltaY<0){
-			offsetDeltaY=-mCurrentOffsetY;
-		}
+        Log.d(TAG, "offsetBy OLD X="+mCurrentOffsetX+", OLD Y="+mCurrentOffsetY);
 
+        // adjust offset values
+        final int adjustedOffsetDeltaX = adjustOffsetDelta(mCurrentOffsetX, offsetDeltaX, getRightOffsetBounds());
+        final int adjustedOffsetDeltaY = adjustOffsetDelta(mCurrentOffsetY, offsetDeltaY, getBottomOffsetBounds());
+
+        Log.d(TAG,"offsetBy offsetDeltaX="+offsetDeltaX+", offsetDeltaY="+offsetDeltaY);
 		// offset views
 		for (int i = 0; i < getChildCount(); i++) {
-			getChildAt(i).offsetLeftAndRight((int) -offsetDeltaX);
-			getChildAt(i).offsetTopAndBottom((int) -offsetDeltaY);
+			getChildAt(i).offsetLeftAndRight(-adjustedOffsetDeltaX);
+			getChildAt(i).offsetTopAndBottom(-adjustedOffsetDeltaY);
 		}
 
 		// update state
@@ -389,6 +402,45 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 		Log.d(TAG, "offsetBy NEW X="+mCurrentOffsetX+", NEW Y="+mCurrentOffsetY);
 		update();
 	}
+
+    private int getBottomOffsetBounds() {
+        return computeVerticalScrollRange() - getHeight();
+    }
+
+    private int getRightOffsetBounds() {
+        return computeHorizontalScrollRange() - getWidth();
+    }
+
+    /**
+     * Adjust requested offset delta to don't allow move content outside of the content bounds.
+     *
+     * @param currentOffset    Current offset.
+     * @param offsetDelta      Desired offset delta to apply.
+     * @param maxAllowedOffset Max allowed offset to left. Usually it's difference between content size and view size.
+     * @return Adjusted offset delta.
+     */
+    private int adjustOffsetDelta(int currentOffset, float offsetDelta, int maxAllowedOffset) {
+		Log.d(TAG,"adjustOffsetDelta currentOffset="+currentOffset+", offsetDelta="+offsetDelta+", maxAllowedOffset="+maxAllowedOffset);
+        // if view content size is smaller than the view size, offset is 0, i.e. we can't offset the content
+        if (maxAllowedOffset < 0) {
+			Log.d(TAG,"adjustOffsetDelta RETURN 0");
+            return 0;
+        }
+
+        // limit offset for top and left edges
+        if (currentOffset + offsetDelta < 0){
+			Log.d(TAG,"adjustOffsetDelta RETURN IF1"+(-currentOffset));
+            return -currentOffset;
+        }
+
+        // limit offset for bottom and right edges
+        if (currentOffset + offsetDelta > maxAllowedOffset){
+			Log.d(TAG,"adjustOffsetDelta RETURN IF2"+(maxAllowedOffset - currentOffset));
+            return maxAllowedOffset - currentOffset;
+        }
+		Log.d(TAG,"adjustOffsetDelta RETURN NORMAL"+((int) offsetDelta));
+        return (int) offsetDelta;
+    }
 
 	private void fling(int velocityX, int velocityY) {
 //		mScroll.forceFinished(true);
@@ -415,7 +467,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	/**
 	 * Check is view (at least one pixel of it) is inside the visible area or
 	 * not.
-	 * 
+	 *
 	 * @param view
 	 *            View to check is it visible or not.
 	 * @return true if the view is invisible i.e. out of visible screen bounds,
@@ -464,7 +516,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
 	/**
 	 * Find item that was touched.
-	 * 
+	 *
 	 * @param touchX
 	 *            X coordinate of touch.
 	 * @param touchY
