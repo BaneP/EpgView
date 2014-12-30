@@ -70,7 +70,7 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
     }
 
     public interface OnItemClickListener {
-        void onItemClick(EpgAdapterView<?> parent, View view, int channelPosition, int eventPosition, long id);
+        void onItemClick(EpgAdapterView<?> parent, View view, int channelPosition, int eventPosition);
     }
 
     public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
@@ -93,10 +93,10 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
      * @return True if there was an assigned OnItemClickListener that was
      * called, false otherwise is returned.
      */
-    public boolean performItemClick(View view, int channelPosition, int eventPosition, long id) {
+    public boolean performItemClick(View view, int channelPosition, int eventPosition) {
         if (mOnItemClickListener != null) {
             playSoundEffect(SoundEffectConstants.CLICK);
-            mOnItemClickListener.onItemClick(this, view, channelPosition, eventPosition, id);
+            mOnItemClickListener.onItemClick(this, view, channelPosition, eventPosition);
             if (view != null) {
                 view.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_CLICKED);
             }

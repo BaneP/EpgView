@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.Random;
@@ -21,6 +22,14 @@ public class MyActivity extends Activity {
 		setContentView(R.layout.main);
 		mEpgView = (EpgView) findViewById(R.id.epg);
 		mEpgView.setAdapter(new Adapter());
+		mEpgView.setOnItemClickListener(new EpgView.OnItemClickListener() {
+
+			@Override
+			public void onItemClick(EpgAdapterView<?> parent, View view,
+					int channelPosition, int eventPosition) {
+				Toast.makeText(MyActivity.this, "ITEM CLICKED "+channelPosition+" "+eventPosition, Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 
 	private class Adapter extends EpgAdapter {
