@@ -1,9 +1,11 @@
 package com.mole.epgview;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.SparseIntArray;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,7 +46,7 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
      */
     int mFirstChannelPosition;
     
-    ArrayList<Integer> mFirstEventsPositions;
+    SparseIntArray mFirstEventsPositions;
     
     /**
      * When set to true, calls to requestLayout() will not propagate up the parent hierarchy.

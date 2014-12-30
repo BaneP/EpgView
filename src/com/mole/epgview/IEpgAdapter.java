@@ -62,14 +62,6 @@ public interface IEpgAdapter {
 	
 	
 	/**
-	 * Get information about first position for desired channel
-	 * @param scroll Current X scroll
-	 * @param channel Desired channel
-	 * @return [0] - Index of first child, [1] child's invisible part of view
-	 */
-	int[] getPositionAndOffsetForScrollValue(int scroll,int channel);
-
-	/**
 	 * Get the data item associated with the specified position in the data set.
 	 * 
 	 * @param channel

@@ -161,20 +161,5 @@ public class MyActivity extends Activity {
 
 			return convertView;
 		}
-
-		@Override
-		public int[] getPositionAndOffsetForScrollValue(int scroll, int channel) {
-			int[] retVal = { -1, -1 };
-			int sum = 0;
-			for (int i = 0; i < widths.length; i++) {
-				sum += widths[i];
-				if (sum > scroll) {
-					retVal[0] = i;
-					retVal[1] = widths[i] - (sum - scroll);
-					return retVal;
-				}
-			}
-			return retVal;
-		}
 	}
 }

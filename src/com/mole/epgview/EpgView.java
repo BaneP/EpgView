@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
+import android.util.SparseIntArray;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
@@ -15,6 +16,8 @@ import android.widget.OverScroller;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Created by bane on 25/12/14.
@@ -75,7 +78,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
-			fling((int)- velocityX, (int) -velocityY);
+			fling((int) -velocityX, (int) -velocityY);
 			return true;
 		}
 
@@ -160,8 +163,8 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 			Log.d(TAG,
 					"computeScroll, mScroll.getCurrX()=" + mScroll.getCurrX()
 							+ ", mScroll.getCurrY()=" + mScroll.getCurrY());
-			offsetBy( mScroll.getCurrX() - mCurrentOffsetX  ,   mScroll.getCurrY()-mCurrentOffsetY
-					);
+			offsetBy(mScroll.getCurrX() - mCurrentOffsetX, mScroll.getCurrY()
+					- mCurrentOffsetY);
 		}
 	}
 
@@ -244,7 +247,19 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
 			if (mAdapter != null) {
 				final int channelsCount = mChannelItemCount;
+				final int previousFirstChannelPosition = mFirstChannelPosition;
 				calculateFirstChannelPosition();
+
+				// View is scrolled vertically so we must update first events
+				// positions map
+				if (previousFirstChannelPosition != mFirstChannelPosition) {
+					final int length = mFirstEventsPositions.size();
+					int key = 0;
+					for (int i = 0; i < length; i++) {
+						key = mFirstEventsPositions.keyAt(i);
+					}
+					// TODO
+				}
 				Log.d(TAG, "layoutChildren mFirstChannelPosition="
 						+ mFirstChannelPosition);
 				// Calculate first child top invisible part
@@ -257,9 +272,8 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 					final int eventCount = getEventsCount(i);
 					// Get first child position based on current scroll value
 					// and calculate its invisible part
-					int[] firstPosInfo = mAdapter
-							.getPositionAndOffsetForScrollValue(
-									mCurrentOffsetX, i);
+					int[] firstPosInfo = getPositionAndOffsetForScrollValue(
+							mCurrentOffsetX, i);
 					// No data for desired channel, don't draw anything
 					if (firstPosInfo[1] < 0 || firstPosInfo[0] < 0) {
 						continue;
@@ -300,6 +314,23 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 				mBlockLayoutRequests = false;
 			}
 		}
+	}
+
+	private int[] getPositionAndOffsetForScrollValue(int scroll, int channel) {
+		int[] retVal = { -1, -1 };
+		int sum = 0;
+		final int count = mAdapter.getEventsCount(channel);
+		int width = 0;
+		for (int i = 0; i < count; i++) {
+			width = mAdapter.getEventWidth(channel, i);
+			sum += width;
+			if (sum > scroll) {
+				retVal[0] = i;
+				retVal[1] = width - (sum - scroll);
+				return retVal;
+			}
+		}
+		return retVal;
 	}
 
 	protected boolean isItemAttachedToWindow(int channelIndex, int eventIndex) {
@@ -407,7 +438,8 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 	 *            Offset Y delta.
 	 */
 	private void offsetBy(float offsetDeltaX, float offsetDeltaY) {
-		Log.d(TAG, "offsetBy offsetDeltaX="+offsetDeltaX+", offsetDeltaY="+offsetDeltaY);
+		Log.d(TAG, "offsetBy offsetDeltaX=" + offsetDeltaX + ", offsetDeltaY="
+				+ offsetDeltaY);
 		// adjust offset values
 		final int adjustedOffsetDeltaX = adjustOffsetDelta(mCurrentOffsetX,
 				offsetDeltaX, getRightOffsetBounds());
@@ -526,7 +558,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 		mSelectedChannelPosition = INVALID_POSITION;
 		mSelectedEventPosition = INVALID_POSITION;
 		mFirstChannelPosition = 0;
-		mFirstEventsPositions = new ArrayList<Integer>();
+		mFirstEventsPositions = new SparseIntArray();
 		mRecycler.clearAll();
 
 		// mScroll.startScroll(0, 0, 0, 0, 0);
