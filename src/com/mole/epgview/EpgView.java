@@ -16,8 +16,6 @@ import android.widget.OverScroller;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Set;
 
 /**
  * Created by bane on 25/12/14.
@@ -279,8 +277,11 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 						continue;
 					}
 					currentX -= firstPosInfo[1];
-
+					if(firstPosInfo[0]>0){
+						currentX += mHorizontalDivider;
+					}
 					for (int j = firstPosInfo[0]; j < eventCount; j++) {
+
 						final int eventWidth = mAdapter.getEventWidth(i, j)
 								- (j == 0 ? 0 : mHorizontalDivider);
 						final boolean attached = isItemAttachedToWindow(i, j);

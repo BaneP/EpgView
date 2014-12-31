@@ -12,7 +12,7 @@
         epgView:channelRowHeight="50dp"
         epgView:oneMinutePixelWidth="5dp"
         epgView:verticalDivider="1dp"
-        epgView:horizontalDivider="1dp"
+        epgView:horizontalDivider="3dp"
         epgView:numberOfDaysToDisplay="7">
 <!--
         <Button
