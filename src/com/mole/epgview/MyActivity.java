@@ -158,12 +158,12 @@ public class MyActivity extends Activity {
                 ViewGroup parent) {
             if (convertView == null) {
                 convertView = new TextView(parent.getContext());
-                Random rand = new Random();
-                int r = rand.nextInt(255);
-                int g = rand.nextInt(255);
-                int b = rand.nextInt(255);
-                convertView.setBackgroundColor(Color.argb(128, r, g, b));
             }
+            Random rand = new Random();
+            int r = rand.nextInt(255);
+            int g = rand.nextInt(255);
+            int b = rand.nextInt(255);
+            convertView.setBackgroundColor(Color.argb(128, r, g, b));
             ((TextView) convertView).setText("channel " + channel + ", event "
                     + event);
 

@@ -11,7 +11,7 @@
         android:padding="10dp"
         epgView:channelRowHeight="50dp"
         epgView:oneMinutePixelWidth="5dp"
-        epgView:verticalDivider="1dp"
+        epgView:verticalDivider="3dp"
         epgView:horizontalDivider="3dp"
         epgView:numberOfDaysToDisplay="7">
 <!--

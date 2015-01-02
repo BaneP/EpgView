@@ -1,15 +1,13 @@
 package com.mole.epgview;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.SparseIntArray;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
+
+import java.util.HashMap;
 
 /**
  * Created by bane on 26/12/14.
@@ -39,21 +37,22 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
     /**
      * The number of channel items in the current adapter.
      */
-    int mChannelItemCount=0;
+    int mChannelItemCount = 0;
 
     /**
      * First visible channel position
      */
-    int mFirstChannelPosition;
-    
-    SparseIntArray mFirstEventsPositions;
-    
+    int mFirstChannelPosition = INVALID_POSITION;
+    int mLastChannelPosition = INVALID_POSITION;
+
+    HashMap<Integer, FirstEventPosition> mFirstEventsPositions;
+
     /**
      * When set to true, calls to requestLayout() will not propagate up the parent hierarchy.
      * This is used to layout the children during a layout pass.
      */
     boolean mBlockLayoutRequests = false;
-    
+
     /**
      * Indicates that this view is currently being laid out.
      */
@@ -127,6 +126,24 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
     public abstract T getAdapter();
 
     public abstract void setAdapter(T adapter);
+
+    /**
+     * @return Returns first visible channel in EpgView
+     */
+    public int getFirstChannelPosition() {
+        return mFirstChannelPosition;
+    }
+
+    /**
+     * @return Returns last visible channel in EpgView
+     */
+    public int getLastChannelPosition() {
+        return mLastChannelPosition;
+    }
+
+    public int getNumberOfVisibleChannels() {
+        return mLastChannelPosition - mFirstChannelPosition;
+    }
 
     /**
      * This method is not supported and throws an UnsupportedOperationException when called.
@@ -325,30 +342,43 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
      *
      * @param view an adapter item, or a descendant of an adapter item. This must be visible in this
      *             AdapterView at the time of the call.
-     * @return the position within the adapter's data set of the view, or {@link #INVALID_POSITION}
+     * @return Array of two positions ([0] - Channel index, [1] - Event index) within the adapter's data set of the
+     * view, or {@link
+     * #INVALID_POSITION}
      * if the view does not correspond to a list item (or it is not currently visible).
      */
-    public int getPositionForView(View view) {
+    public int[] getPositionForView(View view) {
         int[] selectedPosition = { INVALID_POSITION, INVALID_POSITION };
-        View listItem = view;
         try {
-            View v;
-            while (!(v = (View) listItem.getParent()).equals(this)) {
-                listItem = v;
-            }
+            EpgView.LayoutParams lp = (EpgView.LayoutParams) view.getLayoutParams();
+            selectedPosition[0] = lp.getChannelIndex();
+            selectedPosition[1] = lp.getEventIndex();
+            return selectedPosition;
         } catch (ClassCastException e) {
-            // We made it up to the window without find this list view
-            return INVALID_POSITION;
-        }
-        // Search the children for the list item
-        final int childCount = getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            if (getChildAt(i).equals(listItem)) {
-                return mFirstChannelPosition + i;
-            }
         }
         // Child not found!
-        return INVALID_POSITION;
+        return selectedPosition;
+    }
+
+    class FirstEventPosition {
+        private int mFirstEventPosition = INVALID_POSITION;
+        private boolean updatedInLayout = false;
+
+        FirstEventPosition(int firstPosition) {
+            this.mFirstEventPosition = firstPosition;
+        }
+
+        public int getFirstEventPosition() {
+            return mFirstEventPosition;
+        }
+
+        public boolean isUpdatedInLayout() {
+            return updatedInLayout;
+        }
+
+        public void setUpdatedInLayout(boolean updatedInLayout) {
+            this.updatedInLayout = updatedInLayout;
+        }
     }
 
 }
