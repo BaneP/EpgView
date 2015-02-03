@@ -28,11 +28,11 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
      * The listener that receives notifications when an item is clicked.
      */
     OnItemClickListener mOnItemClickListener;
+
     /**
-     * Selected positions
+     * Currently selected view
      */
-    int mSelectedChannelPosition = INVALID_POSITION;
-    int mSelectedEventPosition = INVALID_POSITION;
+    View mSelectedView;
 
     /**
      * The number of channel items in the current adapter.
@@ -90,7 +90,6 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
      * @param view            The view within the AdapterView that was clicked.
      * @param channelPosition The vertical position of the view in the adapter.
      * @param eventPosition   The horizontal position of the view in the adapter.
-     * @param id              The row id of the item that was clicked.
      * @return True if there was an assigned OnItemClickListener that was
      * called, false otherwise is returned.
      */
@@ -228,11 +227,23 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
     }
 
     public int getSelectedItemChannelPosition() {
-        return mSelectedChannelPosition;
+        int selectedChannel = INVALID_POSITION;
+        try {
+            selectedChannel = ((EpgView.LayoutParams) mSelectedView.getLayoutParams())
+                    .getChannelIndex();
+        } catch (Exception e) {
+        }
+        return selectedChannel;
     }
 
     public int getSelectedItemEventPosition() {
-        return mSelectedEventPosition;
+        int selectedEvent = INVALID_POSITION;
+        try {
+            selectedEvent = ((EpgView.LayoutParams) mSelectedView.getLayoutParams())
+                    .getEventIndex();
+        } catch (Exception e) {
+        }
+        return selectedEvent;
     }
 
     public abstract View getSelectedView();
@@ -303,7 +314,8 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
     /**
      * Gets the data associated with the specified position in the list.
      *
-     * @param position Which data to get
+     * @param channelPosition Which channel data to get
+     * @param eventPosition Which event data to get
      * @return The data associated with the specified position in the list
      */
     public Object getEventItemAtPosition(int channelPosition, int eventPosition) {
@@ -322,17 +334,20 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
                 + "You probably want setOnItemClickListener instead");
     }
 
-    private void fireOnSelected() {
+    void fireOnSelected() {
         if (mOnItemSelectedListener == null) {
             return;
         }
-        final int channelSelection = getSelectedItemChannelPosition();
-        final int eventSelection = getSelectedItemEventPosition();
-        if (channelSelection >= 0) {
-            View v = getSelectedView();
-            mOnItemSelectedListener.onItemSelected(this, v, channelSelection, eventSelection);
-        } else {
+        if (mSelectedView == null) {
             mOnItemSelectedListener.onNothingSelected(this);
+        }else {
+            EpgView.LayoutParams lp=null;
+            try {
+                lp = (EpgView.LayoutParams) mSelectedView.getLayoutParams();
+                mOnItemSelectedListener.onItemSelected(this, mSelectedView, lp.getChannelIndex(), lp.getEventIndex());
+            }catch (ClassCastException e) {
+                mOnItemSelectedListener.onNothingSelected(this);
+            }
         }
     }
 
@@ -360,25 +375,25 @@ public abstract class EpgAdapterView<T extends EpgAdapter> extends ViewGroup {
         return selectedPosition;
     }
 
-    class FirstEventPosition {
-        private int mFirstEventPosition = INVALID_POSITION;
-        private boolean updatedInLayout = false;
+class FirstEventPosition {
+    private int mFirstEventPosition = INVALID_POSITION;
+    private boolean updatedInLayout = false;
 
-        FirstEventPosition(int firstPosition) {
-            this.mFirstEventPosition = firstPosition;
-        }
-
-        public int getFirstEventPosition() {
-            return mFirstEventPosition;
-        }
-
-        public boolean isUpdatedInLayout() {
-            return updatedInLayout;
-        }
-
-        public void setUpdatedInLayout(boolean updatedInLayout) {
-            this.updatedInLayout = updatedInLayout;
-        }
+    FirstEventPosition(int firstPosition) {
+        this.mFirstEventPosition = firstPosition;
     }
+
+    public int getFirstEventPosition() {
+        return mFirstEventPosition;
+    }
+
+    public boolean isUpdatedInLayout() {
+        return updatedInLayout;
+    }
+
+    public void setUpdatedInLayout(boolean updatedInLayout) {
+        this.updatedInLayout = updatedInLayout;
+    }
+}
 
 }

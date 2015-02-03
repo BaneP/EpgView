@@ -2,14 +2,14 @@ package com.mole.epgview;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.GestureDetector;
+import android.view.*;
 import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.OverScroller;
 
@@ -67,6 +67,15 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
     private OverScroller mScroll;
 
     /**
+     * Selection rectangle position object, holds information about selected view coordinates on screen
+     */
+    private Rect mSelectorRect = new Rect();
+    /**
+     * Selector drawable
+     */
+    private Drawable mSelector;
+
+    /**
      * View that is first touched by user (used for user click)
      */
     private View mTouchedView;
@@ -78,10 +87,9 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
                 float distanceX, float distanceY) {
             offsetBy(distanceX, distanceY);
+            selectNextView(mSelectedView,null);
             return true;
         }
-
-        ;
 
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -95,21 +103,22 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
             // wouldn't be handled as item tap
             mTouchedView = mScroll.computeScrollOffset() ? null
                     : getTouchedView(e.getX(), e.getY());
+
             mScroll.forceFinished(true);
             postInvalidateOnAnimation();
             return true;
         }
 
-        ;
-
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
-            if (mTouchedView == null)
+            if (mTouchedView == null) {
                 return true;
+            }
             LayoutParams lp = (LayoutParams) mTouchedView.getLayoutParams();
             if (lp != null) {
                 performItemClick(mTouchedView, lp.mChannelIndex, lp.mEventIndex);
             }
+            selectNextView(mSelectedView,mTouchedView);
             mTouchedView = null;
             return true;
         }
@@ -148,6 +157,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
                     R.styleable.EpgView_horizontalDivider, 0);
             mNumberOfDaysToDisplayData = a.getInt(
                     R.styleable.EpgView_numberOfDaysToDisplay, 1);
+            mSelector = a.getDrawable(R.styleable.EpgView_selector);
         } finally {
             a.recycle();
         }
@@ -160,6 +170,8 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
         mRecycler = new Recycler();
         setFocusable(true);
     }
+
+
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
@@ -374,8 +386,9 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
     /**
      * Determine if view for desired channel and desired event is already visible
+     *
      * @param channelIndex Desired channel index
-     * @param eventIndex Desired event index
+     * @param eventIndex   Desired event index
      * @return TRUE if view is on the screen, FALSE otherwise
      */
     protected boolean isItemAttachedToWindow(int channelIndex, int eventIndex) {
@@ -487,6 +500,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
     /**
      * Starts fling scroll of EpgView
+     *
      * @param velocityX
      * @param velocityY
      */
@@ -571,6 +585,88 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
                 || view.getBottom() <= 0;
     }
 
+    /**
+     * Make new view selected.
+     * @param oldSelectedView
+     * @param newSelectedView
+     */
+    private void selectNextView(View oldSelectedView, View newSelectedView) {
+        if(oldSelectedView==null && newSelectedView==null){
+            return;
+        }
+        Rect oldViewRect=null, newViewRect;
+        if (oldSelectedView != null) {
+            oldSelectedView.setSelected(false);
+            oldViewRect=new Rect();
+            oldViewRect.left=(int)oldSelectedView.getX();
+            oldViewRect.top=(int)oldSelectedView.getY();
+            oldViewRect.right=oldViewRect.left+oldSelectedView.getWidth();
+            oldViewRect.bottom=oldViewRect.top+oldSelectedView.getHeight();
+        }
+        mSelectedView = newSelectedView;
+        if(oldViewRect!=null){
+            invalidate(oldViewRect);
+        }
+        if(newSelectedView==null){
+            fireOnSelected();
+            return;
+        }
+        newSelectedView.setSelected(true);
+        newViewRect=new Rect();
+        newViewRect.left=(int)newSelectedView.getX();
+        newViewRect.top=(int)newSelectedView.getY();
+        newViewRect.right=newViewRect.left+newSelectedView.getWidth();
+        newViewRect.bottom=newViewRect.top+newSelectedView.getHeight();
+        invalidate(newViewRect);
+        fireOnSelected();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (mAdapter == null || mAdapter.getChannelsCount() == 0) {
+            return false;
+        }
+        switch (keyCode) {
+        case KeyEvent.KEYCODE_DPAD_RIGHT: {
+            return true;
+        }
+        case KeyEvent.KEYCODE_DPAD_LEFT: {
+            int selectedEventIndex = getSelectedItemEventPosition();
+            if (selectedEventIndex > 0) {
+                View nextView = getTouchedView(mSelectedView.getX() - mHorizontalDivider - 1, mSelectedView.getY());
+                if (nextView != null) {
+                    selectNextView(mSelectedView,nextView);
+                }
+            }
+            return true;
+        }
+        case KeyEvent.KEYCODE_ENTER:
+        case KeyEvent.KEYCODE_DPAD_CENTER: {
+            LayoutParams lp = (LayoutParams) mSelectedView.getLayoutParams();
+            performItemClick(mSelectedView, lp.getChannelIndex(), lp.getEventIndex());
+            return true;
+        }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+
+        if (mSelectedView == null) {
+            return;
+        }
+
+        mSelectorRect.left = mSelectedView.getLeft();
+        mSelectorRect.top = mSelectedView.getTop();
+        mSelectorRect.right = mSelectedView.getRight();
+        mSelectorRect.bottom = mSelectedView.getBottom();
+
+        mSelector.setBounds(mSelectorRect);
+        mSelector.draw(canvas);
+    }
+
     @Override
     public EpgAdapter getAdapter() {
         return mAdapter;
@@ -587,15 +683,11 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
         mChannelItemCount = mAdapter.getChannelsCount();
         mTotalHeight = mChannelItemCount * mChannelRowHeight + mVerticalDivider
                 * (mChannelItemCount - 1);
-        mSelectedChannelPosition = INVALID_POSITION;
-        mSelectedEventPosition = INVALID_POSITION;
+        mSelectedView = null;
         mFirstChannelPosition = 0;
         mLastChannelPosition = INVALID_POSITION;
         mFirstEventsPositions = new HashMap<Integer, FirstEventPosition>();
         mRecycler.clearAll();
-
-        // mScroll.startScroll(0, 0, 0, 0, 0);
-        // mScroll.abortAnimation();
 
         removeAllViewsInLayout();
         requestLayout();
@@ -604,7 +696,7 @@ public class EpgView extends EpgAdapterView<EpgAdapter> {
 
     @Override
     public View getSelectedView() {
-        return null;
+        return mSelectedView;
     }
 
     /**

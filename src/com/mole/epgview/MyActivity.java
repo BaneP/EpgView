@@ -27,7 +27,21 @@ public class MyActivity extends Activity {
             @Override
             public void onItemClick(EpgAdapterView<?> parent, View view,
                     int channelPosition, int eventPosition) {
-                Toast.makeText(MyActivity.this, "ITEM CLICKED " + channelPosition + " " + eventPosition,
+//                Toast.makeText(MyActivity.this, "ITEM CLICKED " + channelPosition + " " + eventPosition,
+//                        Toast.LENGTH_SHORT).show();
+            }
+        });
+        mEpgView.setOnItemSelectedListener(new EpgAdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(EpgAdapterView<?> parent, View view, int channelPosition,
+                    int eventPosition) {
+                Toast.makeText(MyActivity.this, "ITEM SELECTED " + channelPosition + " " + eventPosition,
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(EpgAdapterView<?> parent) {
+                Toast.makeText(MyActivity.this, "NOTHING SELECTED",
                         Toast.LENGTH_SHORT).show();
             }
         });

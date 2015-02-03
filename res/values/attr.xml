@@ -6,5 +6,6 @@
         <attr name="channelRowHeight" format="dimension"/>
         <attr name="verticalDivider" format="dimension"/>
         <attr name="horizontalDivider" format="dimension"/>
+        <attr name="selector" format="reference|color"/>
     </declare-styleable>
 </resources>
